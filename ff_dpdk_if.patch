@@ -1,0 +1,38 @@
+diff --git a/ff_dpdk_if.c b/ff_dpdk_if_mod.c
+index 5a104d8..2b09687 100644
+--- a/ff_dpdk_if.c
++++ b/ff_dpdk_if_mod.c
+@@ -624,7 +624,7 @@ init_port_start(void)
+
+             /* Set RSS mode */
+             uint64_t default_rss_hf = ETH_RSS_PROTO_MASK;
+-            port_conf.rxmode.mq_mode = ETH_MQ_RX_RSS;
++            port_conf.rxmode.mq_mode = ETH_MQ_RX_NONE;
+             port_conf.rx_adv_conf.rss_conf.rss_hf = default_rss_hf;
+             if (dev_info.hash_key_size == 52) {
+                 rsskey = default_rsskey_52bytes;
+@@ -1915,10 +1915,10 @@ main_loop(void *arg)
+         process_msg_ring(qconf->proc_id, pkts_burst);
+
+         div_tsc = rte_rdtsc();
+-
++       int ret_val = 0;
+         if (likely(lr->loop != NULL && (!idle || cur_tsc - usch_tsc >= drain_tsc))) {
+             usch_tsc = cur_tsc;
+-            lr->loop(lr->arg);
++            ret_val = lr->loop(lr->arg);
+         }
+
+         idle_sleep_tsc = rte_rdtsc();
+@@ -1944,6 +1944,10 @@ main_loop(void *arg)
+         ff_top_status.idle_tsc += end_tsc - cur_tsc - usr_tsc - sys_tsc;
+
+         ff_top_status.loops++;
++
++       if(ret_val < 0){
++          break;
++       }
+     }
+
+     return 0;
+
